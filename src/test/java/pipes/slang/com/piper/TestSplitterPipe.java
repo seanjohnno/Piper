@@ -38,7 +38,7 @@ public class TestSplitterPipe {
         l.add("Hello");
         l.add("List");
         l.add("Splitter");
-        splitter.handleInput(l);
+        splitter.input(l);
 
         Assert.assertEquals(l.size(), (int)wInt.val);
     }

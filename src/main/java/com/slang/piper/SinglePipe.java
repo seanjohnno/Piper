@@ -10,6 +10,10 @@ public abstract class SinglePipe<I, O> extends Pipe<I, O> {
     public SinglePipe() {
     }
 
+    public SinglePipe(ThreadType type) {
+        super(type);
+    }
+
     /**
      * Accepts input, calls process, passes output to next pipe
      * @param input

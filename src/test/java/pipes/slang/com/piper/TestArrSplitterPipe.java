@@ -29,7 +29,7 @@ public class TestArrSplitterPipe {
         });
 
         String[] l = {"Hello", "List", "Splitter" };
-        splitter.handleInput(l);
+        splitter.input(l);
 
         Assert.assertEquals(l.length, (int)wInt.val);
     }

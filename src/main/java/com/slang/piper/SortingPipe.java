@@ -25,6 +25,15 @@ public class SortingPipe<I> extends CollectorPipe<I>  {
     }
 
     /**
+     * Constructor
+     * @param comparator    Comparator used to sort items
+     */
+    public SortingPipe(Comparator<I> comparator, ThreadType type) {
+        super(type);
+        mComparator = comparator;
+    }
+
+    /**
      * Takes each item and sorts using comparator
      * @param input
      */

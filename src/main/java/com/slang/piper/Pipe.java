@@ -35,7 +35,11 @@ public abstract class Pipe<I, O> {
      * Construction + Public Methods
      ------------------------------------------------------------------------------------------*/
 
-    protected Pipe() {
+    public Pipe() {
+    }
+
+    public Pipe(ThreadType threadType) {
+        mInputThreadType = threadType;
     }
 
     /**
@@ -49,110 +53,78 @@ public abstract class Pipe<I, O> {
         mNextPipe = rhs;
 
         if(mPendingData != null) {
-            O data = mPendingData;
+            mNextPipe.input(mPendingData);
             mPendingData = null;
-            passOutput(data);
         }
 
-        if(mPendingComplete == true) {
+        if(mPendingComplete) {
+            mNextPipe.complete();
             mPendingComplete = false;
-            passComplete();
         }
 
         return rhs;
+    }
+
+    public void input(final I input) {
+        if(mInputThreadType == ThreadType.ThreadDefault) {
+            handleInput(input);
+        } else {
+            executeOnThread(new Runnable() { public void run() {
+                handleInput(input);
+            } } );
+        }
+    }
+
+    public void complete() {
+        if(mInputThreadType == ThreadType.ThreadDefault) {
+            handleInputComplete();
+        } else {
+            executeOnThread(new Runnable() {
+                public void run() {
+                    handleInputComplete();
+                }
+            });
+        }
+    }
+
+    /*------------------------------------------------------------------------------------------
+     * Protected Methods
+     ------------------------------------------------------------------------------------------*/
+
+    protected synchronized void passOutput(O output) {
+        if(mNextPipe == null) {
+            mPendingData = output;
+        } else {
+            mNextPipe.input(output);
+        }
+    }
+
+    protected synchronized void passComplete() {
+        if(mNextPipe == null) {
+            mPendingComplete = true;
+        } else {
+            mNextPipe.complete();
+        }
     }
 
     /**
      * Called from previous pipe, passes it's output into here
      * @param mInput       Previous pipes output, this pipes input
      */
-    public abstract void handleInput(I mInput);
+    protected void handleInput(I mInput) { }
 
     /**
      * Called from previous pipe when it's finished outputting
      */
-    public void handleInputComplete() { }
+    protected void handleInputComplete() { }
 
-    /**
-     * Used to tell previous pipe what thread (main/io/current) to call handleInput / handleInputComplete on
-     * @param threadType
-     * @return  This pipe so method calls / connecting can be chained
-     */
-    public Pipe<I, O> handleInputOn(ThreadType threadType) {
-        mInputThreadType = threadType;
-        return this;
-    }
-
-    /**
-     * @return      What thread (main/io/current) to call this pipes handleInput / handleInputComplete on
-     */
-    public ThreadType getHandleInputOn() {
-        return mInputThreadType == null ? mInputThreadType : mInputThreadType;
-    }
-
-    /*------------------------------------------------------------------------------------------
-     * Protected
-     ------------------------------------------------------------------------------------------*/
-
-    /**
-     * Call to pass output onto the next pipe, calls passOutputOnThread
-     * @param output    Output from thuis pipe that serves as input to the next
-     */
-    protected synchronized void passOutput(O output) {
-        if(mNextPipe != null) {
-            passOutputOnThread(output);
-        } else {
-            mPendingData = output;
-        }
-    }
-
-    /**
-     * Calls handleInput() on next pipe on the thread it's specified
-     * @param output
-     */
-    protected void passOutputOnThread(final O output) {
-        Runnable op = new Runnable() {
-            @Override
-            public void run() {
-                mNextPipe.handleInput(output);
-            }
-        };
-        executeOnThread(op);
-    }
-
-    /**
-     * If next pipe has been connected then this calls passCompleteOnThread. If it hasn't been connected
-     * yet then it'll get the message immediately on a connect
-     */
-    protected synchronized void passComplete() {
-        if(mNextPipe != null) {
-            passCompleteOnThread();
-        } else {
-            mPendingComplete = true;
-        }
-    }
-
-    /**
-     * Calls handleInputComplete on connected pipe on thread specified by next pipe
-     */
-    protected void passCompleteOnThread() {
-        Runnable op = new Runnable() {
-            @Override
-            public void run() {
-                mNextPipe.handleInputComplete();
-            }
-        };
-        executeOnThread(op);
-    }
 
     /**
      * Executes operation on thread specified by next pipe
      * @param op        Runnable/operation to execute
      */
     protected void executeOnThread(Runnable op) {
-        if(mNextPipe.mInputThreadType == ThreadType.ThreadDefault) {
-            op.run();
-        } else if(mNextPipe.mInputThreadType == ThreadType.ThreadMain) {
+        if(mInputThreadType == ThreadType.ThreadMain) {
             getMainHandler().post(op);
         } else {
             getIOExecutor().execute(op);
@@ -166,16 +138,15 @@ public abstract class Pipe<I, O> {
         return AsyncTask.THREAD_POOL_EXECUTOR;
     }
 
-    /*------------------------------------------------------------------------------------------
-     * Static handle to main thread Handler
-     ------------------------------------------------------------------------------------------*/
-
-    private static Handler _mainHandler;
-
-    private static Handler getMainHandler() {
+    /**
+     * @return
+     */
+    protected Handler getMainHandler() {
         if(_mainHandler == null) {
             _mainHandler = new Handler(Looper.getMainLooper());
         }
         return _mainHandler;
     }
+
+    private static Handler _mainHandler;
 }

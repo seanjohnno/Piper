@@ -11,7 +11,10 @@ public class ArraySplitterPipe<I> extends Pipe<I[], I> {
      * Construction
      */
     public ArraySplitterPipe() {
+    }
 
+    public ArraySplitterPipe(ThreadType type) {
+        super(type);
     }
 
     /**

@@ -1,10 +1,14 @@
 package pipes.slang.com.piper;
 
+import android.os.Handler;
+
 import com.slang.piper.Pipe;
 import com.slang.piper.Piper;
 
 import org.junit.Assert;
 import org.junit.Test;
+
+import java.util.concurrent.Executor;
 
 /**
  * Created by MrLenovo on 23/02/2016.
@@ -29,7 +33,7 @@ public class TestPipe {
             }
         });
 
-        p.handleInput("Hello");
+        p.input("Hello");
         Assert.assertTrue(called.val);
     }
 
@@ -50,7 +54,7 @@ public class TestPipe {
         }));
 
         String testStr = "Hello";
-        start.handleInput(testStr);
+        start.input(testStr);
         Assert.assertEquals(str.val, testStr);
     }
 
@@ -69,7 +73,7 @@ public class TestPipe {
         }));
 
         String testStr = "Hello";
-        start.handleInput(testStr);
+        start.input(testStr);
         Assert.assertEquals(str.val, testStr.toUpperCase());
     }
 
@@ -89,7 +93,7 @@ public class TestPipe {
 
         // Pass in data
         String testStr = "Hello";
-        start.handleInput(testStr);
+        start.input(testStr);
 
         // Then connect pipe
         start.connect(Piper.pipe(new Piper.Func1<String, Void>() {
@@ -100,5 +104,44 @@ public class TestPipe {
         }));
 
         Assert.assertEquals(str.val, testStr);
+    }
+
+    @Test
+    public void testMainThread() {
+        final WrappedObj<Boolean> b = new WrappedObj<>();
+        b.val = false;
+
+        Piper.start("").connect(new Pipe<String, Void>() {
+            @Override
+            protected void handleInput(String mInput) {
+                b.val = true;
+            }
+        });
+
+        Assert.assertTrue(b.val);
+    }
+
+    @Test
+    public void testIOThread() {
+        final WrappedObj<Boolean> b = new WrappedObj<>();
+        b.val = false;
+
+        Piper.start("").connect(new Pipe<String, Void>() {
+            @Override
+            protected void handleInput(String mInput) {
+                b.val = true;
+            }
+
+            @Override
+            protected Executor getIOExecutor() {
+                return new Executor() {
+                    public void execute(Runnable r) {
+                        r.run();
+                    }
+                };
+            }
+        } );
+
+        Assert.assertTrue(b.val);
     }
 }

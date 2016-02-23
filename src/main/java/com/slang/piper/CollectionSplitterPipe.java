@@ -15,6 +15,10 @@ public class CollectionSplitterPipe<I> extends Pipe<Collection<I>, I> {
     public CollectionSplitterPipe() {
     }
 
+    public CollectionSplitterPipe(ThreadType type) {
+        super(type);
+    }
+
     /**
      * Collection is input, passes each item individually onto next pipe then calls complete
      * @param input

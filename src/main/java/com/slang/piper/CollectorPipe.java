@@ -21,6 +21,10 @@ public class CollectorPipe<I> extends Pipe<I, Collection<I>> {
     public CollectorPipe() {
     }
 
+    public CollectorPipe(ThreadType type) {
+        super(type);
+    }
+
     /**
      * Adds our input items to the list
      * @param input

@@ -36,9 +36,9 @@ public class TestCollectorPipe {
         // Pass all items of array to pipe
         String[] arr = {"Do", "you", "work", "Mr", "Collector", "Pipe", "?"};
         for(String item : arr) {
-            start.handleInput(item);
+            start.input(item);
         }
-        start.handleInputComplete();
+        start.complete();
 
         // Check our output list matches our input array
         for(int i = 0; i < arr.length; i++) {
