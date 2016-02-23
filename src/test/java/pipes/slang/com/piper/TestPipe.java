@@ -17,7 +17,7 @@ public class TestPipe {
 
     @Test
     public void testPipeCreation() {
-        Pipe p = Piper.pipe(null);
+        Pipe p = Piper.single(null);
         Assert.assertNotNull(p);
     }
 
@@ -25,7 +25,7 @@ public class TestPipe {
     public void testPipeInput() {
 
         final Helper.WrappedBool called = Helper.createBool();
-        Pipe<String,String> p = Piper.pipe(new Piper.Func1<String, String>() {
+        Pipe<String,String> p = Piper.single(new Piper.Func1<String, String>() {
             @Override
             public String call(String input) {
                 called.True();
@@ -41,12 +41,12 @@ public class TestPipe {
     public void testPipeOutput() {
         final Helper.WrappedString str = Helper.createStr();
 
-        Pipe<String, String> start = Piper.pipe(new Piper.Func1<String, String>() {
+        Pipe<String, String> start = Piper.single(new Piper.Func1<String, String>() {
             public String call(String input) {
                 return input;
             }
         });
-        start.connect(Piper.pipe(new Piper.Func1<String, Void>() {
+        start.connect(Piper.single(new Piper.Func1<String, Void>() {
             public Void call(String input) {
                 str.val = input;
                 return null;
@@ -62,10 +62,10 @@ public class TestPipe {
     public void testModifyOutput() {
         final Helper.WrappedString str = Helper.createStr();
 
-        Pipe<String, String> start = Piper.pipe(new Piper.Func1<String, String>() { public String call(String input) {
+        Pipe<String, String> start = Piper.single(new Piper.Func1<String, String>() { public String call(String input) {
             return input.toUpperCase();
         }});
-        start.connect(Piper.pipe(new Piper.Func1<String, Void>() {
+        start.connect(Piper.single(new Piper.Func1<String, Void>() {
             public Void call(String input) {
                 str.val = input;
                 return null;
@@ -85,7 +85,7 @@ public class TestPipe {
     public void testBelatedConnect() {
         final Helper.WrappedString str = Helper.createStr();
 
-        Pipe<String, String> start = Piper.pipe(new Piper.Func1<String, String>() {
+        Pipe<String, String> start = Piper.single(new Piper.Func1<String, String>() {
             public String call(String input) {
                 return input;
             }
@@ -96,7 +96,7 @@ public class TestPipe {
         start.input(testStr);
 
         // Then connect pipe
-        start.connect(Piper.pipe(new Piper.Func1<String, Void>() {
+        start.connect(Piper.single(new Piper.Func1<String, Void>() {
             public Void call(String input) {
                 str.val = input;
                 return null;

@@ -29,10 +29,10 @@ public class TestDistributorPipe {
         };
 
         DistributorPipe<String> dis = Piper.<String>distributor();
-        dis.connect(Piper.pipe(func));
-        dis.connect(Piper.pipe(func));
-        dis.connect(Piper.pipe(func));
-        dis.connect(Piper.pipe(func));
+        dis.connect(Piper.single(func));
+        dis.connect(Piper.single(func));
+        dis.connect(Piper.single(func));
+        dis.connect(Piper.single(func));
         Piper.start("Hello").connect(dis);
 
         Assert.assertEquals(4, (int)wo.val);

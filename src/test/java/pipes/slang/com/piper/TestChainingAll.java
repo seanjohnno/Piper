@@ -23,7 +23,7 @@ public class TestChainingAll {
         String[] data = new String[] { "Lets", "pass", "a", "bunch", "of", "strings", "in", "and", "manipulate", "them" };
         Piper.<String[]>start(data)
                 .connect(Piper.<String>splitArr())
-                .connect(Piper.<String, String>pipe(new Piper.Func1<String, String>() {
+                .connect(Piper.<String, String>transform(new Piper.Func1<String, String>() {
                     @Override
                     public String call(String input) {
                         return input.toUpperCase();
@@ -34,11 +34,47 @@ public class TestChainingAll {
                 .connect(new Pipe<String, Void>() {
                     @Override
                     public void handleInput(String input) {
-                        count.val++;
+                        count.val = count.val + 1;
                         if(res.val  != null) {
                             Assert.assertTrue(input.compareTo(res.val) >= 0);
                         }
                         res.val = input;
+                    }
+                });
+        Assert.assertEquals(data.length, (int)count.val);
+    }
+
+    @Test
+    public void testChainAll() {
+
+        // Sample data
+        String[] data = new String[] { "Lets", "pass", "a", "bunch", "of", "strings", "in", "and", "manipulate", "them" };
+
+        // Starts the pipe chain
+        Piper.<String[]>start(data)
+
+                // Splits array and passed each item separately
+                .connect(Piper.<String>splitArr())
+
+                // Transforms each string to uppercase
+                .connect(Piper.<String, String>transform(new Piper.Func1<String, String>() {
+                    @Override
+                    public String call(String input) {
+                        return input.toUpperCase();
+                    }
+                }))
+
+                // Sort the words and output the sorted list
+                .connect(Piper.sort(String.CASE_INSENSITIVE_ORDER))
+
+                // Split them again
+                .connect(Piper.<String>split())
+
+                // Do something with each word
+                .connect(new Pipe<String, Void>() {
+                    @Override
+                    public void handleInput(String input) {
+                       // Do something
                     }
                 });
     }

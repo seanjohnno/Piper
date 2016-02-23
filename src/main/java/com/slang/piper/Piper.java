@@ -33,7 +33,7 @@ public class Piper {
      * @param <O>   Output type
      * @return      Created pipe
      */
-    public static <I, O> SinglePipe<I, O> pipe(final Func1<I, O> func) {
+    public static <I, O> Pipe<I, O> single(final Func1<I, O> func) {
         return new SinglePipe<I, O>() {
             @Override
             protected O process(I input) {
@@ -50,8 +50,42 @@ public class Piper {
      * @param <O>   Output type
      * @return      Created pipe
      */
-    public static <I, O> SinglePipe<I, O> pipe(final Func1<I, O> func, Pipe.ThreadType threadType) {
+    public static <I, O> SinglePipe<I, O> single(final Func1<I, O> func, Pipe.ThreadType threadType) {
         return new SinglePipe<I, O>(threadType) {
+            @Override
+            protected O process(I input) {
+                return func.call(input);
+            }
+        };
+    }
+
+    /**
+     * Creates a transform pipe. Passed in func is invoked passing in input, implementation
+     * of func does the transform and passes output
+     * @param func
+     * @param <I>   Input type
+     * @param <O>   Output type
+     * @return      Created pipe
+     */
+    public static <I, O> TransformPipe<I, O> transform(final Func1<I, O> func) {
+        return new TransformPipe<I, O>() {
+            @Override
+            protected O process(I input) {
+                return func.call(input);
+            }
+        };
+    }
+
+    /**
+     * Creates a single input/output pipe. Passed in func is invoked passing in input, implementation
+     * of func does the transform and passes output
+     * @param func
+     * @param <I>   Input type
+     * @param <O>   Output type
+     * @return      Created pipe
+     */
+    public static <I, O> TransformPipe<I, O> transform(final Func1<I, O> func, Pipe.ThreadType threadType) {
+        return new TransformPipe<I, O>(threadType) {
             @Override
             protected O process(I input) {
                 return func.call(input);

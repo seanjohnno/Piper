@@ -4,6 +4,8 @@ import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Looper;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.Executor;
 
 /**
@@ -27,7 +29,7 @@ public abstract class Pipe<I, O> {
 
     private Pipe<O, ?> mNextPipe;
 
-    private O mPendingData;
+    private List<O> mPendingData;
 
     private boolean mPendingComplete;
 
@@ -53,7 +55,9 @@ public abstract class Pipe<I, O> {
         mNextPipe = rhs;
 
         if(mPendingData != null) {
-            mNextPipe.input(mPendingData);
+            for(O data : mPendingData) {
+                mNextPipe.input(data);
+            }
             mPendingData = null;
         }
 
@@ -93,7 +97,10 @@ public abstract class Pipe<I, O> {
 
     protected synchronized void passOutput(O output) {
         if(mNextPipe == null) {
-            mPendingData = output;
+            if(mPendingData == null) {
+                mPendingData = createOutputStore();
+            }
+            mPendingData.add(output);
         } else {
             mNextPipe.input(output);
         }
@@ -116,8 +123,9 @@ public abstract class Pipe<I, O> {
     /**
      * Called from previous pipe when it's finished outputting
      */
-    protected void handleInputComplete() { }
+    protected void handleInputComplete() {
 
+    }
 
     /**
      * Executes operation on thread specified by next pipe
@@ -146,6 +154,14 @@ public abstract class Pipe<I, O> {
             _mainHandler = new Handler(Looper.getMainLooper());
         }
         return _mainHandler;
+    }
+
+    /**
+     * Called when we've received output but we don't have a piper to pass it to yet
+     * @return
+     */
+    protected List<O> createOutputStore() {
+        return new ArrayList<>();
     }
 
     private static Handler _mainHandler;
